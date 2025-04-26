@@ -40,7 +40,7 @@ jobs:
           push: true # Indicar que SÍ queremos subir la imagen
           tags: | # Lista de etiquetas para la imagen
             ${{ secrets.DOCKERHUB_USERNAME }}/mi-todo-app:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/mi-todo-app:${{ github.sha }} # Etiqueta con el hash del commit para trazabilidad
+            ${{ secrets.DOCKERHUB_USERNAME }}/mi-todo-app:${{ github.sha }} 
           # Opcional: Añadir caché para acelerar futuras builds
           cache-from: type=gha
           cache-to: type=gha,mode=max
