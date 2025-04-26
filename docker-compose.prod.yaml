@@ -1,0 +1,58 @@
+version: '3.8' # Usa una versión reciente
+
+services:
+  todo-app:
+    build:
+      context: ./app # Asegúrate que esta ruta sea correcta para tu Dockerfile
+    image: tu-usuario-dockerhub/mi-todo-app:latest
+    container_name: todo_app_prod
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # ----- LÍNEA MODIFICADA -----
+      - MONGO_URI=mongodb://root:example@todo-database:27017/todoapp?authSource=admin
+      # -----------------------------
+    depends_on:
+      - todo-database
+    networks:
+      - app-network
+
+  todo-database:
+    image: mongo:6
+    container_name: todo_db_prod
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+    volumes:
+      - database:/data/db # Descomentado y usando volumen nombrado
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80" # Exponer Nginx en el puerto 80 estándar
+      # - "443:443" # Si configuras SSL más adelante
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro # Montar config de Nginx (leeremos esto)
+      # - ./nginx/certs:/etc/nginx/certs:ro # Para certificados SSL
+    depends_on:
+      - todo-app
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  database: # Definir el volumen nombrado
